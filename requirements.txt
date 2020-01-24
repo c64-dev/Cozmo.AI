@@ -1,0 +1,7 @@
+selenium
+pillow
+termcolor
+cozmo
+requests
+SpeechRecognition
+PyAudio

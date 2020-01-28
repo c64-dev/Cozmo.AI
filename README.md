@@ -77,9 +77,9 @@ python.exe %HOME%\Cozmo.AI\main.py
 python3 ~/Cozmo.AI/main.py
 ```
 
-## Update 
+## Updating 
 
-To update to CozmoAI's latest version simply run the following commands:
+To update to the latest version of CozmoAI simply run the following commands:
 - On <b>Windows</b> start a command prompt and type:
 ```
 cd %HOME%\Cozmo.AI

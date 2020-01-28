@@ -26,7 +26,7 @@ export PATH=$PATH:/usr/bin
 ```
 
 4. Install all the necessary Python libraries.
-- On <b>Windows</b> start a command prompt using the "cmd.exe" program, go to Python's pip.exe location (eg C:\Python35\Scripts\) and run:
+- On <b>Windows</b> start a command prompt, go to Python's pip.exe location (eg C:\Python35\Scripts\) and run:
 ```
 pip.exe install -U selenium pillow termcolor cozmo requests SpeechRecognition PyAudio
 ```
@@ -42,14 +42,15 @@ pip3 install selenium pillow termcolor cozmo requests SpeechRecognition PyAudio
 After all the requirements are met you can install Cozmo.AI as follows:<br />
 - On <b>Windows</b> start a command prompt using the "cmd.exe" program and type:
 ```
-cd 
-git.exe clone https://github.com/zayfod/pycozmo.git
+set PATH=%PATH%;C:\Program Files\Git\cmd
+cd %HOME%
+git.exe clone https://github.com/c64-dev/Cozmo.AI.git
 ```
 
 - On <b>MacOS</b> and <b>Linux</b> start a Terminal and run:
 ```
 cd ~/
-git clone https://github.com/zayfod/pycozmo.git
+git clone https://github.com/c64-dev/Cozmo.AI.git
 ```
 
 
@@ -66,14 +67,27 @@ There are various guides on the internet depending on your computer OS and phone
 3. After Cozmo wakes up go to the app's settings and enable SDK mode. Now the phone whould display a black text screen and Cozmo should stop moving around. The robot is now ready to execute our Python program.
 
 4. Run the CozmoAI program as follows:<br />
-- On <b>Windows</b> start a command prompt using the "cmd.exe" program and type:
+- On <b>Windows</b> start a command prompt, go to Python's python.exe location (eg C:\Python35\) and run:
 ```
-
+python.exe %HOME%\Cozmo.AI\main.py
 ```
 
 - On <b>MacOS</b> and <b>Linux</b> start a Terminal and run:
 ```
-cd ~/Cozmo.AI
-python3 main.py
+python3 ~/Cozmo.AI/main.py
 ```
 
+## Update 
+
+To update to CozmoAI's latest version simply run the following commands:
+- On <b>Windows</b> start a command prompt and type:
+```
+cd %HOME%\Cozmo.AI
+git.exe pull https://github.com/c64-dev/Cozmo.AI.git
+```
+
+- On <b>MacOS</b> and <b>Linux</b> start a Terminal and run:
+```
+cd ~/Cozmo.AI/
+git pull https://github.com/c64-dev/Cozmo.AI.git
+```

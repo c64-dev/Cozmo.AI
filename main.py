@@ -737,6 +737,7 @@ def addEntry(log, entry):
 
 
 def weather():
+    # New alternative service: http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode=Helsinki
     # ==== Weather module initialization start ====
     global tomorrow_response, forecast_response
     # IP Location
@@ -868,6 +869,7 @@ class AIBot:
             return response
 
 
+# TOFO: Change to new weather service. (Thanks Apple!) http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode=Helsinki
 # TODO: Add bored events to random times if not doing anything (anim_bored_event_01 through to 04)
 # TODO: Add face animations for weather, music, etc Note: anim_meetcozmo_lookface_getout is great for DING sound.
 # TODO: Add movement commands

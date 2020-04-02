@@ -2,7 +2,7 @@
 
 """
 Cozmo.AI
-v. 0.4.9
+v. 0.4.92
 Extending Anki Cozmo robot's abilities, by adding human voice recognition, basic AI bot functions and special commands
 like checking the time/weather, playing music on PC connected speaker etc.
 
@@ -23,19 +23,18 @@ try:
     import sys
     import glob
     import json
+    import feedparser
     import time
     import datetime
     import random
-    import requests
     import speech_recognition as sr
     import cozmo
 
 except ImportError:
     sys.exit("Some packages are required. Do `pip3 install cozmo requests "
-             "termcolor SpeechRecognition Pillow PyAudio` to install.")
+             "termcolor feedparser SpeechRecognition Pillow PyAudio` to install.")
 
 from cozmo.util import degrees, distance_mm, speed_mmps
-from datetime import datetime as dtm
 from termcolor import cprint
 from PIL import Image
 from selenium import webdriver
@@ -50,10 +49,8 @@ version = "ver. 0.4.9"
 title = "Cozmo.AI       " + version
 author = "By c64-dev (nikosl@protonmail.com)"
 descr = "Adding AI chat and voice command functionality to Cozmo robot."
-base_url = "https://api.darksky.net/forecast/"
+weather_url = "http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode="
 ip_url = "http://ipinfo.io/json"
-api_key = "9673b21b3567a2e9d1009b00908453c5/"
-parms = "?units=si"
 
 # Special Commands
 name = ["Cozmo", "Cosmo", "cosmo", "cozmo", "osmo", "Kuzma", "kuzma", "Prisma", "Goodwill", "Robert", "robot",
@@ -74,8 +71,8 @@ cmd_dance = ["dance", ]  # OK
 cmd_music_rock = ["rock", ]  # OK
 cmd_music_favourites = ["favorite", ]  # OK
 cmd_music_stop = ["stop", ]  # OK
-cmd_weather_tomorrow = ["weather", "tomorrow"]  # OK
-cmd_weather_forecast = ["forecast", ]  # OK
+cmd_weather_today = ["weather", "today", "now"]  # OK
+cmd_weather_tomorrow = ["tomorrow", ]  # OK
 cmd_time = ["time", ]  # OK
 cmd_sing = ["sing", ]  # OK
 cmd_vol_mute = ["mute", ]  # OK
@@ -214,8 +211,8 @@ def check_weather(robot):
     global humanString
     concString = humanString.replace('weather', '')
     activate = set(name).intersection(humanString.split())
-    command01 = set(cmd_weather_tomorrow).intersection(concString.split())
-    command02 = set(cmd_weather_forecast).intersection(concString.split())
+    command01 = set(cmd_weather_today).intersection(concString.split())
+    command02 = set(cmd_weather_tomorrow).intersection(concString.split())
     if activate:
         if command01:
             print("Human says: " + humanString)
@@ -226,9 +223,9 @@ def check_weather(robot):
             cprint("Gathering weather data... Please wait.", "yellow")
             weather()
             # addEntry(log, "Cosmo says: " + tomorrow_response)
-            robot.say_text(tomorrow_response, use_cozmo_voice=True, duration_scalar=0.6,
+            robot.say_text(today_response, use_cozmo_voice=True, duration_scalar=0.6,
                            voice_pitch=0).wait_for_completed()
-            print("Cozmo says: " + tomorrow_response)
+            print("Cozmo says: " + today_response)
             listen_robot(robot)
             humanString = listen_robot.parsedText
         elif command02:
@@ -236,9 +233,9 @@ def check_weather(robot):
             # addEntry(log, "Human says: " + humanString)
             cprint("Gathering weather data... Please wait.", "yellow")
             # addEntry(log, "Cosmo says: " + forecast_response)
-            robot.say_text(forecast_response, use_cozmo_voice=True, duration_scalar=0.6,
+            robot.say_text(tomorrow_response, use_cozmo_voice=True, duration_scalar=0.6,
                            voice_pitch=0).wait_for_completed()
-            print("Cozmo says: " + forecast_response)
+            print("Cozmo says: " + tomorrow_response)
             listen_robot(robot)
             humanString = listen_robot.parsedText
         else:
@@ -661,9 +658,9 @@ def printSupportedCommands():
     cprint(str(cmd_music_favourites) + " : ", "cyan", end=''), cprint("Cozmo play my favourite songs.",
                                                                       "white", attrs=['bold'])
     cprint(str(cmd_music_stop) + " : ", "cyan", end=''), cprint("Cozmo stop the music.", "white", attrs=['bold'])
-    cprint(str(cmd_weather_tomorrow) + " : ", "cyan", end=''), cprint("Cozmo what's the weather tomorrow?", "white",
+    cprint(str(cmd_weather_today) + " : ", "cyan", end=''), cprint("Cozmo what's the weather today?", "white",
                                                                       attrs=['bold'])
-    cprint(str(cmd_weather_forecast) + " : ", "cyan", end=''), cprint("Cozmo what's the forecast for the next days?",
+    cprint(str(cmd_weather_tomorrow) + " : ", "cyan", end=''), cprint("Cozmo what's the forecast for tomorrow?",
                                                                       "white", attrs=['bold'])
     cprint(str(cmd_time) + " : ", "cyan", end=''), cprint("Cozmo what's the time now?", "white", attrs=['bold'])
     # cprint(str(cmd_sleep) + " : ", "cyan", end=''), cprint("Cozmo go to sleep.", "white", attrs=['bold'])
@@ -737,70 +734,42 @@ def addEntry(log, entry):
 
 
 def weather():
-    # New alternative service: http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode=Helsinki
     # ==== Weather module initialization start ====
-    global tomorrow_response, forecast_response
+    global today_response, tomorrow_response, ip_url
+
     # IP Location
     response_ip = requests.get(ip_url)
     ip = response_ip.json()
-    location = ip["loc"]
+    location = ip["city"].replace(" ", "%20")
 
     # Store complete_url variable
-    complete_url = base_url + api_key + location + parms
+    complete_url = weather_url + location
+
     # Request data
-    response = requests.get(complete_url)
-    j = response.json()
+    d = feedparser.parse(complete_url)
 
-    # Pass main values
-    city = ip["city"]
-    current = j["currently"]
-    detailed = j["hourly"]
-    forecast = j["daily"]
+# Parse weather data
+    cr = ((d.entries[0].description).split("<")[0].split(":")[1])
+    td = ((d.entries[1].description).split("<")[0].split("C "))
+    tm = ((d.entries[2].description).split("<")[0].split("C "))
+    now = cr.strip()
+    city = location.replace("%20", " ")
+    todayLow = td[1].replace("Low:", "")
+    todayHigh = td[0].replace("High:", "")
+    todayDesc = td[2]
+    tomorrowLow = tm[1].replace("Low:", "")
+    tomorrowHigh = tm[0].replace("High:", "")
+    tomorrowDesc = tm[2].replace(";", " and")
 
-    # Tomorrow's weather
-    summary1 = current["summary"]
-    summary2 = detailed["summary"]
-    try:
-        sunrise = dtm.fromtimestamp(forecast["data"][0]["sunriseTime"]).strftime("%I:%M %p")
-    except KeyError:
-        sunrise = "-"
-    try:
-        sunset = dtm.fromtimestamp(forecast["data"][0]["sunsetTime"]).strftime("%I:%M %p")
-    except KeyError:
-        sunset = "-"
-    current_temp = round(current["temperature"])
-    min_temp = round(forecast["data"][0]["temperatureMin"])
-    max_temp = round(forecast["data"][0]["temperatureMax"])
+    # Today's weather
+    today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" + 
+                      todayLow + "degrees to " + todayHigh + "degrees celcius." + "\nRight now it is " + now + ".")
 
-    tomorrow_response = ("In " + city + " will be " + summary2.lower() + " with temperatures from "
-                         + str(min_temp) + " degrees celcius to " + str(max_temp)
-                         + " degrees celcius. \nThe sun will rise at " + sunrise + " and set at " + sunset
-                         + ". \nRight now it is " + str(current_temp) + " degrees celcius and " + summary1.lower()
-                         + ".")
+    # Tomorrow's forecast
+    i = ("Tomorrow in " + city + " will be " + tomorrowDesc + ", with temperatures from " + 
+            tomorrowLow + "degrees to " + tomorrowHigh + "degrees celcius.")
 
-    # 3 day Forecast
-    fc_summary = forecast["summary"]
-    Day_1 = dtm.fromtimestamp(forecast["data"][1]["time"]).strftime("%A")
-    Day_1_summary = str(forecast["data"][1]["summary"])
-    Day_1_min = round(forecast["data"][1]["temperatureMin"])
-    Day_1_max = round(forecast["data"][1]["temperatureMax"])
-
-    Day_2 = dtm.fromtimestamp(forecast["data"][2]["time"]).strftime("%A")
-    Day_2_summary = forecast["data"][2]["summary"]
-    Day_2_min = round(forecast["data"][2]["temperatureMin"])
-    Day_2_max = round(forecast["data"][2]["temperatureMax"])
-
-    Day_3 = dtm.fromtimestamp(forecast["data"][3]["time"]).strftime("%A")
-    Day_3_summary = forecast["data"][3]["summary"]
-    Day_3_min = round(forecast["data"][3]["temperatureMin"])
-    Day_3_max = round(forecast["data"][3]["temperatureMax"])
-
-    data = ("In " + city + " " + Day_1 + " will be " + Day_1_summary.lower() + " with " + str(Day_1_min) + " to "
-            + str(Day_1_max) + " degrees celcius. \n" + Day_2 + " will be " + Day_2_summary.lower() + " with "
-            + str(Day_2_min) + " to " + str(Day_2_max) + " degrees. \n" + Day_3 + " will be "
-            + Day_3_summary.lower() + " with " + str(Day_3_min) + " to " + str(Day_3_max) + " degrees.")
-
-    forecast_response = (data[:254] + '') if len(data) > 254 else data
+    tomorrow_response = (i[:254] + '') if len(i) > 254 else i
 
 
 def readystate_complete(d):
@@ -869,7 +838,6 @@ class AIBot:
             return response
 
 
-# TOFO: Change to new weather service. (Thanks Apple!) http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode=Helsinki
 # TODO: Add bored events to random times if not doing anything (anim_bored_event_01 through to 04)
 # TODO: Add face animations for weather, music, etc Note: anim_meetcozmo_lookface_getout is great for DING sound.
 # TODO: Add movement commands

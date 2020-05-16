@@ -738,7 +738,7 @@ def weather():
     global today_response, tomorrow_response, ip_url
 
     # IP Location
-    response_ip = requests.get(ip_url)
+    response_ip = get(ip_url)
     ip = response_ip.json()
     location = ip["city"].replace(" ", "%20")
 

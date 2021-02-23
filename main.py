@@ -36,8 +36,9 @@ except ImportError:
     sys.exit("Some packages are required. Do `pip3 install cozmo requests "
              "termcolor feedparser SpeechRecognition Pillow PyAudio` to install.")
 
-from PIL import Image
 from random import randint
+
+from PIL import Image
 from cozmo.util import degrees, distance_mm, speed_mmps
 from requests import get
 from selenium import webdriver
@@ -743,18 +744,8 @@ def weather():
     # ==== Weather module initialization start ====
     global today_response, tomorrow_response, ip_url
 
-<<<<<<< HEAD
     ip = get(ip_url).json()
     location = unidecode.unidecode(ip["city"] + ", " + ip["country"]).replace(" ", "%20")
-=======
-    # IP Location
-    response_ip = get(ip_url)
-    ip = response_ip.json()
-    location = ip["city"].replace(" ", "%20")
-
-    # Store complete_url variable
-    complete_url = weather_url + location
->>>>>>> 858381d81bd4da92bd324d43762f3094926ec1ac
 
     # Request data
     d = feedparser.parse(weather_url + location)

@@ -11,7 +11,7 @@ This project aims to extend Cozmo's abilities with voice recognition, interactiv
 - <a href="https://git-scm.com/downloads">Git</a>
 - <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>
 
-2. Download <a href=https://github.com/mozilla/geckodriver/releases/latest">geckodriver</a> and install according to your OS.
+2. Download <a href="https://github.com/mozilla/geckodriver/releases/latest">geckodriver</a> and install according to your OS.
 - On Windows, copy the .exe to a folder (eg C:\bin\gecko) and open a command prompt to declare it in your PATH:<br />
 ```
 $ set PATH=%PATH%;C:\bin\gecko
@@ -27,12 +27,12 @@ export PATH=$PATH:~/.local/bin/
 3. Install all the necessary Python libraries. 
 - On <b>Windows</b> start a command prompt, go to Python's pip.exe location (eg C:\Python35\Scripts\) and run:
 ```
-pip.exe install -U selenium pillow termcolor cozmo requests SpeechRecognition selenium
+pip.exe install -U selenium pillow termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode
 ```
 
 - On <b>MacOS</b> and <b>Linux</b> start a Terminal and run:
 ```
-pip3 install selenium pillow termcolor cozmo requests SpeechRecognition selenium
+pip3 install selenium pillow termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode
 ```
 
 

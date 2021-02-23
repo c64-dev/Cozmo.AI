@@ -19,6 +19,7 @@ GNU General Public License for more details.
 
 try:
     import asyncio
+    import cfg
     import os
     import sys
     import glob
@@ -29,23 +30,26 @@ try:
     import random
     import speech_recognition as sr
     import cozmo
+    import unidecode
 
 except ImportError:
     sys.exit("Some packages are required. Do `pip3 install cozmo requests "
              "termcolor feedparser SpeechRecognition Pillow PyAudio` to install.")
 
-from cozmo.util import degrees, distance_mm, speed_mmps
-from termcolor import cprint
+from random import randint
+
 from PIL import Image
+from cozmo.util import degrees, distance_mm, speed_mmps
+from requests import get
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from random import randint
-from requests import get
+from termcolor import cprint
 
 # General Parameters
-version = "ver. 0.4.9"
+version = "ver. 0.4.92"
 title = "Cozmo.AI       " + version
 author = "By c64-dev (nikosl@protonmail.com)"
 descr = "Adding AI chat and voice command functionality to Cozmo robot."
@@ -79,12 +83,12 @@ cmd_vol_mute = ["mute", ]  # OK
 cmd_vol_min = ["lower", ]  # OK
 cmd_vol_mid = ["higher", ]  # OK
 cmd_vol_max = ["maximum", ]  # OK
-cmd_freeplay = ["freeplay", "free play", "FreePlay"] #OK
+cmd_freeplay = ["freeplay", "free play", "FreePlay"]  # OK
 
 
 # Initialize system
 def initCozmo():
-    global log, user_name, interval
+    # global log, user_name, interval
 
     cozmo.robot.Robot.drive_off_charger_on_connect = False
     _ = os.system('cls' if os.name == 'nt' else 'clear')
@@ -119,7 +123,7 @@ def initCozmo():
 def mainLoop(robot):
     global humanString, cozmoString, interval
 
-    # Reset variables and connect to AI bot
+    # Set variables and connect to AI bot
     humanString = None
     cozmoString = None
     interval = 5
@@ -128,7 +132,7 @@ def mainLoop(robot):
     try:
         # Connect to
         pb.browser.get(pb.url)
-        robot.say_text("Yes " + user_name + "?", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0)\
+        robot.say_text("Yes " + user_name + "?", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
             .wait_for_completed()
     except:
         pb.browser.close()
@@ -168,10 +172,11 @@ def mainLoop(robot):
         # addEntry(log, "Human says: " + humanString)
         print("Human says: " + humanString)
 
-        # Get bot's response
+        # Send user query
         pb.send_input(humanString)
-        cozmoString = pb.get_response()
 
+        # Get bot's response
+        cozmoString = pb.get_response()
         print("Cozmo says: " + cozmoString)
         # addEntry(log, "Cozmo says: " + cozmoString)
 
@@ -218,7 +223,7 @@ def check_weather(robot):
             print("Human says: " + humanString)
             # addEntry(log, "Human says: " + humanString)
             robot.play_anim("anim_memorymatch_point_player_audio").wait_for_completed()
-            #robot.say_text("Gathering weather data...", use_cozmo_voice=True, duration_scalar=0.6,
+            # robot.say_text("Gathering weather data...", use_cozmo_voice=True, duration_scalar=0.6,
             # voice_pitch=0).wait_for_completed()
             cprint("Gathering weather data... Please wait.", "yellow")
             weather()
@@ -353,7 +358,8 @@ def check_volume(robot):
             # addEntry(log, "Cozmo voice low.")
             print("Cozmo voice low.")
             robot.set_robot_volume(0.2)
-            robot.say_text("Voice lowered.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
+            robot.say_text("Voice lowered.", use_cozmo_voice=True, duration_scalar=0.6,
+                           voice_pitch=0).wait_for_completed()
             listen_robot(robot)
             humanString = listen_robot.parsedText
         elif command03:
@@ -361,7 +367,8 @@ def check_volume(robot):
             # addEntry(log, "Cozmo voice higher.")
             print("Cozmo voice higher.")
             robot.set_robot_volume(0.5)
-            robot.say_text("Voice higher.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
+            robot.say_text("Voice higher.", use_cozmo_voice=True, duration_scalar=0.6,
+                           voice_pitch=0).wait_for_completed()
             listen_robot(robot)
             humanString = listen_robot.parsedText
         elif command04:
@@ -369,7 +376,8 @@ def check_volume(robot):
             # addEntry(log, "Cozmo voice maximum.")
             print("Cozmo voice maximum.")
             robot.set_robot_volume(1.0)
-            robot.say_text("Voice set to maximum level.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
+            robot.say_text("Voice set to maximum level.", use_cozmo_voice=True, duration_scalar=0.6,
+                           voice_pitch=0).wait_for_completed()
             listen_robot(robot)
             humanString = listen_robot.parsedText
     else:
@@ -482,7 +490,6 @@ def bored_anim(robot):
 def wake_up(robot):
     global user_name
     t = (datetime.datetime.now().strftime("%H"))
-    greet = None
 
     if t >= "20":
         greet = "Good evening "
@@ -659,7 +666,7 @@ def printSupportedCommands():
                                                                       "white", attrs=['bold'])
     cprint(str(cmd_music_stop) + " : ", "cyan", end=''), cprint("Cozmo stop the music.", "white", attrs=['bold'])
     cprint(str(cmd_weather_today) + " : ", "cyan", end=''), cprint("Cozmo what's the weather today?", "white",
-                                                                      attrs=['bold'])
+                                                                   attrs=['bold'])
     cprint(str(cmd_weather_tomorrow) + " : ", "cyan", end=''), cprint("Cozmo what's the forecast for tomorrow?",
                                                                       "white", attrs=['bold'])
     cprint(str(cmd_time) + " : ", "cyan", end=''), cprint("Cozmo what's the time now?", "white", attrs=['bold'])
@@ -669,7 +676,7 @@ def printSupportedCommands():
                                                                                         "white", attrs=['bold'])
     cprint(str(cmd_exit) + " : ", "cyan", end=''), cprint("Cozmo exit program please.", "white", attrs=['bold'])
     cprint("['FreePlay'] : ", "cyan", end=''), cprint("Cozmo activate FreePlay mode.",
-                                                                                        "white", attrs=['bold'])
+                                                      "white", attrs=['bold'])
 
 
 def listen_robot(robot):
@@ -737,21 +744,16 @@ def weather():
     # ==== Weather module initialization start ====
     global today_response, tomorrow_response, ip_url
 
-    # IP Location
-    response_ip = requests.get(ip_url)
-    ip = response_ip.json()
-    location = ip["city"].replace(" ", "%20")
-
-    # Store complete_url variable
-    complete_url = weather_url + location
+    ip = get(ip_url).json()
+    location = unidecode.unidecode(ip["city"] + ", " + ip["country"]).replace(" ", "%20")
 
     # Request data
-    d = feedparser.parse(complete_url)
+    d = feedparser.parse(weather_url + location)
 
-# Parse weather data
-    cr = ((d.entries[0].description).split("<")[0].split(":")[1])
-    td = ((d.entries[1].description).split("<")[0].split("C "))
-    tm = ((d.entries[2].description).split("<")[0].split("C "))
+    # Parse weather data
+    cr = (d.entries[0].description.split("<")[0].split(":")[1])
+    td = (d.entries[1].description.split("<")[0].split("C "))
+    tm = d.entries[2].description.split("<")[0].split("C ")
     now = cr.strip()
     city = location.replace("%20", " ")
     todayLow = td[1].replace("Low:", "")
@@ -762,12 +764,12 @@ def weather():
     tomorrowDesc = tm[2].replace(";", " and")
 
     # Today's weather
-    today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" + 
+    today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" +
                       todayLow + "degrees to " + todayHigh + "degrees celcius." + "\nRight now it is " + now + ".")
 
     # Tomorrow's forecast
-    i = ("Tomorrow in " + city + " will be " + tomorrowDesc + ", with temperatures from " + 
-            tomorrowLow + "degrees to " + tomorrowHigh + "degrees celcius.")
+    i = ("Tomorrow in " + city + " will be " + tomorrowDesc + ", with temperatures from " +
+         tomorrowLow + "degrees to " + tomorrowHigh + "degrees celcius.")
 
     tomorrow_response = (i[:254] + '') if len(i) > 254 else i
 
@@ -782,11 +784,12 @@ class AIBot:
 
     def __init__(self):
 
-        # Initialize selenium options
+        # Initialize selenium options 
         self.opts = Options()
-        self.opts.add_argument("-headless")
+        self.opts.add_argument("--headless")
         self.browser = webdriver.Firefox(options=self.opts)
         self.url = "http://demo.vhost.pandorabots.com/pandora/talk?botid=b0dafd24ee35a477"
+        self.searchEngine = "https://start.duckduckgo.com"
 
     def get_form(self):
 
@@ -833,11 +836,14 @@ class AIBot:
                   }
                 """)
                 response = (data[:254] + '') if len(data) > 254 else data
+                self.browser.quit()
             except BrokenPipeError:
                 AIBot().get_response()
+                self.browser.quit()
             return response
 
 
+# TODO: Add web search ability (duckduckgo) class="results--sidebar js-results-sidebar"
 # TODO: Add bored events to random times if not doing anything (anim_bored_event_01 through to 04)
 # TODO: Add face animations for weather, music, etc Note: anim_meetcozmo_lookface_getout is great for DING sound.
 # TODO: Add movement commands
@@ -845,6 +851,8 @@ class AIBot:
 # TODO: Make Cozmo say something and go to sleep with animation.
 # TODO: Add pick me up ability
 # TODO: Capture all exceptions
+# IMPROVE: Increase webdriver speed / Change to Chromium since it offers always on capability.
+# IMPROVE: Incorporate improved selenium routines to main app.
 # IMPROVE: Have Cozmo return to base before exiting.
 # IMPROVE: Move to new Google Voice API https://pythonspot.com/speech-recognition-using-google-speech-api/
 # OPTIMIZE: Clean up code

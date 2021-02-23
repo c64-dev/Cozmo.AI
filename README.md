@@ -24,7 +24,7 @@ cp ~/geckodriver ~/.local/bin/
 export PATH=$PATH:~/.local/bin/
 ```
 
-3. Install all the necessary Python libraries.
+3. Install all the necessary Python libraries. 
 - On <b>Windows</b> start a command prompt, go to Python's pip.exe location (eg C:\Python35\Scripts\) and run:
 ```
 pip.exe install -U selenium pillow termcolor cozmo requests SpeechRecognition selenium

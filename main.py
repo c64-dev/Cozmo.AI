@@ -36,9 +36,8 @@ except ImportError:
     sys.exit("Some packages are required. Do `pip3 install cozmo requests "
              "termcolor feedparser SpeechRecognition Pillow PyAudio` to install.")
 
-from random import randint
-
 from PIL import Image
+from random import randint
 from cozmo.util import degrees, distance_mm, speed_mmps
 from requests import get
 from selenium import webdriver

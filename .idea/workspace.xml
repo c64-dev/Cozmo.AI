@@ -23,7 +23,12 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="37325015-14f6-4f56-ae41-9abf5373bcb3" name="Default Changelist" comment="" />
+    <list default="true" id="37325015-14f6-4f56-ae41-9abf5373bcb3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Cozmo.AI.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg.py" beforeDir="false" afterPath="$PROJECT_DIR$/cfg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,7 +57,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
@@ -84,13 +89,21 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="249" y="22" key="#Project_Structure" timestamp="1614102457223">
+    <state x="249" y="22" key="#Project_Structure" timestamp="1614102667020">
       <screen x="0" y="22" width="1280" height="721" />
     </state>
-    <state x="249" y="22" key="#Project_Structure/0.22.1280.721@0.22.1280.721" timestamp="1614102457223" />
+    <state x="249" y="22" key="#Project_Structure/0.22.1280.721@0.22.1280.721" timestamp="1614102667020" />
+    <state x="209" y="44" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1614102464067">
+      <screen x="0" y="22" width="1280" height="721" />
+    </state>
+    <state x="209" y="44" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.22.1280.721@0.22.1280.721" timestamp="1614102464067" />
     <state x="384" y="262" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1614089698885">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="384" y="262" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.0.1280.800@0.0.1280.800" timestamp="1614089698885" />
+    <state x="426" y="67" width="670" height="676" key="search.everywhere.popup" timestamp="1614102748955">
+      <screen x="0" y="22" width="1280" height="721" />
+    </state>
+    <state x="426" y="67" width="670" height="676" key="search.everywhere.popup/0.22.1280.721@0.22.1280.721" timestamp="1614102748955" />
   </component>
 </project>

@@ -53,8 +53,6 @@ version = "ver. 0.4.92"
 title = "Cozmo.AI       " + version
 author = "By c64-dev (nikosl@protonmail.com)"
 descr = "Adding AI chat and voice command functionality to Cozmo robot."
-weather_url = "http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode="
-ip_url = "http://ipinfo.io/json"
 
 # Special Commands
 name = ["Cozmo", "Cosmo", "cosmo", "cozmo", "osmo", "Kuzma", "kuzma", "Prisma", "Goodwill", "Robert", "robot",
@@ -88,7 +86,7 @@ cmd_freeplay = ["freeplay", "free play", "FreePlay"]  # OK
 
 # Initialize system
 def initCozmo():
-    # global log, user_name, interval
+    global log, user_name, interval
 
     cozmo.robot.Robot.drive_off_charger_on_connect = False
     _ = os.system('cls' if os.name == 'nt' else 'clear')
@@ -227,10 +225,10 @@ def check_weather(robot):
             # voice_pitch=0).wait_for_completed()
             cprint("Gathering weather data... Please wait.", "yellow")
             weather()
-            # addEntry(log, "Cosmo says: " + tomorrow_response)
-            robot.say_text(today_response, use_cozmo_voice=True, duration_scalar=0.6,
+            # addEntry(log, "Cosmo says: " + weather.tomorrow_response)
+            robot.say_text(weather.today_response, use_cozmo_voice=True, duration_scalar=0.6,
                            voice_pitch=0).wait_for_completed()
-            print("Cozmo says: " + today_response)
+            print("Cozmo says: " + weather.today_response)
             listen_robot(robot)
             humanString = listen_robot.parsedText
         elif command02:
@@ -238,9 +236,9 @@ def check_weather(robot):
             # addEntry(log, "Human says: " + humanString)
             cprint("Gathering weather data... Please wait.", "yellow")
             # addEntry(log, "Cosmo says: " + forecast_response)
-            robot.say_text(tomorrow_response, use_cozmo_voice=True, duration_scalar=0.6,
+            robot.say_text(weather.tomorrow_response, use_cozmo_voice=True, duration_scalar=0.6,
                            voice_pitch=0).wait_for_completed()
-            print("Cozmo says: " + tomorrow_response)
+            print("Cozmo says: " + weather.tomorrow_response)
             listen_robot(robot)
             humanString = listen_robot.parsedText
         else:
@@ -742,13 +740,12 @@ def addEntry(log, entry):
 
 def weather():
     # ==== Weather module initialization start ====
-    global today_response, tomorrow_response, ip_url
 
-    ip = get(ip_url).json()
+    ip = get(cfg.ip_url).json()
     location = unidecode.unidecode(ip["city"] + ", " + ip["country"]).replace(" ", "%20")
 
     # Request data
-    d = feedparser.parse(weather_url + location)
+    d = feedparser.parse(cfg.weather_url + location)
 
     # Parse weather data
     cr = (d.entries[0].description.split("<")[0].split(":")[1])
@@ -764,14 +761,14 @@ def weather():
     tomorrowDesc = tm[2].replace(";", " and")
 
     # Today's weather
-    today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" +
+    weather.today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" +
                       todayLow + "degrees to " + todayHigh + "degrees celcius." + "\nRight now it is " + now + ".")
 
     # Tomorrow's forecast
     i = ("Tomorrow in " + city + " will be " + tomorrowDesc + ", with temperatures from " +
          tomorrowLow + "degrees to " + tomorrowHigh + "degrees celcius.")
 
-    tomorrow_response = (i[:254] + '') if len(i) > 254 else i
+    weather.tomorrow_response = (i[:254] + '') if len(i) > 254 else i
 
 
 def readystate_complete(d):

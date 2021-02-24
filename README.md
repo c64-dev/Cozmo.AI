@@ -3,7 +3,7 @@
 
 This project aims to extend Cozmo's abilities with voice recognition, interactive chatting sessions (served by online AI chatbots) special user commands, pulling useful information from the internet, etc.
 
-
+ 
 ## Requirements
 
 1. If not already installed, download and install the following:

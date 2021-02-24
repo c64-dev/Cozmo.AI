@@ -2,7 +2,7 @@
 
 """
 Cozmo.AI
-v. 0.4.92
+v. 0.4.93
 Extending Anki Cozmo robot's abilities, by adding human voice recognition, basic AI bot functions and special commands
 like checking the time/weather, playing music on PC connected speaker etc.
 
@@ -748,28 +748,32 @@ def weather():
     d = feedparser.parse(cfg.weather_url + location)
 
     # Parse weather data
-    cr = (d.entries[0].description.split("<")[0].split(":")[1])
-    td = (d.entries[1].description.split("<")[0].split("C "))
-    tm = d.entries[2].description.split("<")[0].split("C ")
-    now = cr.strip()
-    city = location.replace("%20", " ")
-    todayLow = td[1].replace("Low:", "")
-    todayHigh = td[0].replace("High:", "")
-    todayDesc = td[2]
-    tomorrowLow = tm[1].replace("Low:", "")
-    tomorrowHigh = tm[0].replace("High:", "")
-    tomorrowDesc = tm[2].replace(";", " and")
+    try:
+        cr = (d.entries[0].description.split("<")[0].split(":")[1])
+        td = (d.entries[1].description.split("<")[0].split("C "))
+        tm = d.entries[2].description.split("<")[0].split("C ")
+        now = cr.strip()
+        city = location.replace("%20", " ")
+        todayLow = td[1].replace("Low:", "")
+        todayHigh = td[0].replace("High:", "")
+        todayDesc = td[2]
+        tomorrowLow = tm[1].replace("Low:", "")
+        tomorrowHigh = tm[0].replace("High:", "")
+        tomorrowDesc = tm[2].replace(";", " and")
+    except IndexError:
+        cprint("ERROR: Cannot parse weather data. Invalid location.", "red")
 
-    # Today's weather
-    weather.today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" +
-                      todayLow + "degrees to " + todayHigh + "degrees celcius." + "\nRight now it is " + now + ".")
-
-    # Tomorrow's forecast
-    i = ("Tomorrow in " + city + " will be " + tomorrowDesc + ", with temperatures from " +
-         tomorrowLow + "degrees to " + tomorrowHigh + "degrees celcius.")
-
-    weather.tomorrow_response = (i[:254] + '') if len(i) > 254 else i
-
+    # Output weather forecast or fall back to default response if location invalid.
+    try:
+        weather.today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" +
+                          todayLow + "degrees to " + todayHigh + "degrees celcius. " + "Right now it is " + now + ".")
+        i = ("Tomorrow in " + city + " will be " + tomorrowDesc + ", with temperatures from " +
+             tomorrowLow + "degrees to " + tomorrowHigh + "degrees celcius.")
+        weather.tomorrow_response = (i[:254] + '') if len(i) > 254 else i
+    except NameError:
+        cprint("ERROR: Invalid location. Falling back to default responses.", "red")
+        today_response = "I'm sorry, but your current location could not be determined."
+        tomorrow_response = "I'm sorry, but your current location could not be determined."
 
 def readystate_complete(d):
     # AFAICT Selenium offers no better way to wait for the document to be loaded,

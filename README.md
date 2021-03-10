@@ -1,4 +1,4 @@
-<div align="middle">![Cozmo.AI Header](/resources/header.jpg)</div>
+![Cozmo.AI Header](/resources/header.jpg)
 
 This project aims to extend Cozmo's abilities with voice recognition, interactive chatting sessions (served by online AI chatbots) special user commands, pulling useful information from the internet, etc.
 

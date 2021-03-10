@@ -2,12 +2,13 @@
 
 """
 Cozmo.AI
-Lexicon of available Voice Commands
+Lexicon of available special Voice Commands for Cozmo
 """
 
 name = ["Cozmo", "Cosmo", "cosmo", "cozmo", "osmo", "Kuzma", "kuzma", "Prisma", "Goodwill", "Robert", "robot",
         "Christmas", "customer", "cuz my", "cuz", "Kosmos", "kiasma", "Kismet", "Kokomo"]
-exit = ["exit", "bye", "quit"]
+quit = ["later", "bye", "quit", "finish", "another time"]
+shutdown = ["shutdown", "exit"]
 # forward = ["forward", ]
 # backward = ["back", ]
 # right = ["right", ]

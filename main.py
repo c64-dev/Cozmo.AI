@@ -19,7 +19,7 @@ GNU General Public License for more details.
 
 try:
     import asyncio
-    import cfg
+    import config
     import os
     import sys
     import glob
@@ -31,10 +31,11 @@ try:
     import speech_recognition as sr
     import cozmo
     import unidecode
+    import voice_commands
 
 except ImportError:
-    sys.exit("Some packages are required. Do `pip3 install cozmo requests "
-             "termcolor feedparser SpeechRecognition Pillow PyAudio` to install.")
+    sys.exit("Some packages are required. Do `pip3 install selenium pillow termcolor cozmo requests SpeechRecognition"
+             "selenium feedparser beautifulsoup4 unidecode pyaudio` to install.")
 
 from random import randint
 
@@ -54,39 +55,10 @@ title = "Cozmo.AI       " + version
 author = "By c64-dev (nikosl@protonmail.com)"
 descr = "Adding AI chat and voice command functionality to Cozmo robot."
 
-# Special Commands
-name = ["Cozmo", "Cosmo", "cosmo", "cozmo", "osmo", "Kuzma", "kuzma", "Prisma", "Goodwill", "Robert", "robot",
-        "Christmas", "customer", "cuz my", "cuz", "Kosmos", "kiasma", "Kismet", "Kokomo"]
-cmd_exit = ["exit", "bye", "quit"]
-# cmd_forward = ["forward", ]
-# cmd_backward = ["back", ]
-# cmd_right = ["right", ]
-# cmd_left = ["left", ]
-# cmd_arm = ["lift", "arm"]
-# cmd_head = ["look", "up"]
-# cmd_follow = ["follow", "face"]
-cmd_photo = ["photo", ]  # OK
-# cmd_blocks = ["blocks", ]
-cmd_dance = ["dance", ]  # OK
-# cmd_sleep = ["sleep", ]
-# cmd_charge = ["charge", "charger"]
-cmd_music_rock = ["rock", ]  # OK
-cmd_music_favourites = ["favorite", ]  # OK
-cmd_music_stop = ["stop", ]  # OK
-cmd_weather_today = ["weather", "today", "now"]  # OK
-cmd_weather_tomorrow = ["tomorrow", ]  # OK
-cmd_time = ["time", ]  # OK
-cmd_sing = ["sing", ]  # OK
-cmd_vol_mute = ["mute", ]  # OK
-cmd_vol_min = ["lower", ]  # OK
-cmd_vol_mid = ["higher", ]  # OK
-cmd_vol_max = ["maximum", ]  # OK
-cmd_freeplay = ["freeplay", "free play", "FreePlay"]  # OK
-
 
 # Initialize system
 def initCozmo():
-    global log, user_name, interval
+    global log, user_name
 
     cozmo.robot.Robot.drive_off_charger_on_connect = False
     _ = os.system('cls' if os.name == 'nt' else 'clear')
@@ -97,7 +69,6 @@ def initCozmo():
     cprint("Initializing system...", "yellow")
     weather()
     log = initLog()
-    interval = 3  # Setting the initial audio polling interval in seconds.
     print("System init ok")
     print("Connected to Cozmo!")
     print()
@@ -119,42 +90,51 @@ def initCozmo():
 
 # Main Program Loop
 def mainLoop(robot):
-    global humanString, cozmoString, interval
+    global humanString, cozmoString
 
     # Set variables and connect to AI bot
     humanString = None
     cozmoString = None
-    interval = 5
-    pb = AIBot()
+    bot = AIBot()
 
     try:
-        # Connect to
-        pb.browser.get(pb.url)
+        # Connect to Chatbot
+        bot.browser.get(bot.url)
         robot.say_text("Yes " + user_name + "?", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
             .wait_for_completed()
     except:
-        pb.browser.close()
-        # TODO: Have a more elegant exit to the program.
-        sys.exit(0)
+        bot.browser.close()
+        cprint("Warning: Chat function offline. Returning to FreePlay mode.", "red")
+        robot.say_text("Warning: Chat function offline. Returning to FreePlay mode.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
+            .wait_for_completed()
+        freeplay(robot)
+        mainLoop(robot)
 
     while True:
-        # In a loop, listen to user
+        # Try to get the chat's input form, otherwise resume FreePlay.
         try:
-            pb.get_form()
+            bot.get_form()
         except:
-            sys.exit(0)
+            bot.browser.close()
+            cprint("Warning: Chat function offline. Returning to FreePlay mode.", "red")
+            robot.say_text("Warning: Chat function offline. Returning to FreePlay mode.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
+                .wait_for_completed()
+            freeplay(robot)
+            mainLoop(robot)
 
+        # While robot is connected, listen to the user in a loop
         if robot:
             flash_backpack(robot, True)
-        listen_robot(robot)
-        humanString = listen_robot.parsedText
-
-        if robot:
+            listen_robot(robot)
+            humanString = listen_robot.parsedText
             flash_backpack(robot, False)
+
+        #  TODO: Optimise the following process. Instead of checking for all the following create dictionary of special words to check against quickly.
 
         # Here we look for our special commands (quit, time, weather, movements etc).
         # If none are found we move forward with the chatbot and listen again in a loop.
-        check_quit()
+        check_quit(robot)
+        check_shutdown(robot)
         check_time(robot)
         check_weather(robot)
         check_music_rock(robot)
@@ -166,15 +146,14 @@ def mainLoop(robot):
         check_photo(robot)
         check_freeplay(robot)
 
-        # Else, we log what the human said (optional).
         # addEntry(log, "Human says: " + humanString)
         print("Human says: " + humanString)
 
         # Send user query
-        pb.send_input(humanString)
+        bot.send_input(humanString)
 
         # Get bot's response
-        cozmoString = pb.get_response()
+        cozmoString = bot.get_response()
         print("Cozmo says: " + cozmoString)
         # addEntry(log, "Cozmo says: " + cozmoString)
 
@@ -184,15 +163,34 @@ def mainLoop(robot):
 
 
 # Special Commands Init #
-def check_quit():
+def check_quit(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_exit).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.quit).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
-        # addEntry(log, "Conversation ended.")
         print("")
-        cprint("Exit requested by user", "yellow")
+        cprint("Conversation ended.", "yellow")
+        robot.say_text("OK " + user_name + ". Bye for now. Returning to FreePlay mode.", use_cozmo_voice=True, duration_scalar=0.6,
+                       voice_pitch=0).wait_for_completed()
+        AIBot().browser.quit()
+        freeplay(robot)
+        mainLoop(robot)
+    else:
+        return
+
+def check_shutdown(robot):
+    global humanString
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.shutdown).intersection(humanString.split())
+    if activate and command:
+        print("Human says: " + humanString)
+        print("")
+        cprint("Shutting down.", "yellow")
+        robot.say_text("OK " + user_name + ". Shutting down system.", use_cozmo_voice=True, duration_scalar=0.6,
+                       voice_pitch=0).wait_for_completed()
+        AIBot().browser.quit()
+        #  To Do: Create cozmo shutdown sequence.
         sys.exit(0)
     else:
         return
@@ -200,8 +198,8 @@ def check_quit():
 
 def check_time(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_time).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.time).intersection(humanString.split())
     if activate and command:
         clock(robot)
         listen_robot(robot)
@@ -213,9 +211,9 @@ def check_time(robot):
 def check_weather(robot):
     global humanString
     concString = humanString.replace('weather', '')
-    activate = set(name).intersection(humanString.split())
-    command01 = set(cmd_weather_today).intersection(concString.split())
-    command02 = set(cmd_weather_tomorrow).intersection(concString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command01 = set(voice_commands.weather_today).intersection(concString.split())
+    command02 = set(voice_commands.weather_tomorrow).intersection(concString.split())
     if activate:
         if command01:
             print("Human says: " + humanString)
@@ -247,8 +245,8 @@ def check_weather(robot):
 
 def check_music_rock(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_music_rock).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.music_rock).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
         # addEntry(log, "Human says: " + humanString)
@@ -267,8 +265,8 @@ def check_music_rock(robot):
 
 def check_music_fav(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_music_favourites).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.music_favourites).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
         # addEntry(log, "Human says: " + humanString)
@@ -287,8 +285,8 @@ def check_music_fav(robot):
 
 def check_music_stop(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_music_stop).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.music_stop).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
         # addEntry(log, "Human says: " + humanString)
@@ -304,8 +302,8 @@ def check_music_stop(robot):
 
 def check_dance(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_dance).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.dance).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
         # addEntry(log, "Human says: " + humanString)
@@ -323,8 +321,8 @@ def check_dance(robot):
 
 def check_song(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_sing).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.sing).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
         # addEntry(log, "Human says: " + humanString)
@@ -338,11 +336,11 @@ def check_song(robot):
 def check_volume(robot):
     global humanString
     concString = humanString.replace('volume', '')
-    activate = set(name).intersection(humanString.split())
-    command01 = set(cmd_vol_mute).intersection(concString.split())
-    command02 = set(cmd_vol_min).intersection(concString.split())
-    command03 = set(cmd_vol_mid).intersection(concString.split())
-    command04 = set(cmd_vol_max).intersection(concString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command01 = set(voice_commands.vol_mute).intersection(concString.split())
+    command02 = set(voice_commands.vol_min).intersection(concString.split())
+    command03 = set(voice_commands.vol_mid).intersection(concString.split())
+    command04 = set(voice_commands.vol_max).intersection(concString.split())
     if activate:
         if command01:
             print("Human says: " + humanString)
@@ -384,8 +382,8 @@ def check_volume(robot):
 
 def check_photo(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_photo).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.photo).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
         # addEntry(log, "Human says: " + humanString)
@@ -398,8 +396,8 @@ def check_photo(robot):
 
 def check_freeplay(robot):
     global humanString
-    activate = set(name).intersection(humanString.split())
-    command = set(cmd_freeplay).intersection(humanString.split())
+    activate = set(voice_commands.name).intersection(humanString.split())
+    command = set(voice_commands.freeplay).intersection(humanString.split())
     if activate and command:
         print("Human says: " + humanString)
         # addEntry(log, "Human says: " + humanString)
@@ -411,7 +409,7 @@ def check_freeplay(robot):
 
 
 # Setup robot functionality #
-# (Here we place actions that we may need to call individually from the voice commands.)
+# (Here we place actions that we may need to call individually from the voice voice_commands.)
 def partytime(robot):
     # Triggers don't always play the same action (better for more natural behavior). For a simple animation use:
     # robot.play_anim("anim_speedtap_wingame_intensity02_01").wait_for_completed()
@@ -497,35 +495,28 @@ def wake_up(robot):
         greet = "Good day "
     else:
         greet = "Good morning "
+
+    checkBattery(robot)
+    robot.set_head_angle(degrees(30)).wait_for_completed()
+    robot.set_all_backpack_lights(cozmo.lights.off_light)
+
     if robot.is_on_charger:
-        checkBattery(robot)
-        robot.set_head_angle(degrees(30)).wait_for_completed()
         robot.set_all_backpack_lights(cozmo.lights.green_light)
         robot.play_anim_trigger(cozmo.anim.Triggers.ConnectWakeUp).wait_for_completed()
         robot.drive_off_charger_contacts().wait_for_completed()
         robot.drive_straight(distance_mm(150), speed_mmps(150)).wait_for_completed()
         robot.set_head_angle(degrees(35), in_parallel=True).wait_for_completed()
-        robot.turn_in_place(degrees(5)).wait_for_completed()
-        robot.turn_in_place(degrees(-5)).wait_for_completed()
-        robot.play_anim('anim_freeplay_reacttoface_like_01').wait_for_completed()
-        ask_name(robot)
-        user_name = ask_name.parsedText
-        robot.say_text(greet + user_name + ". Entering FreePlay mode.",
-                       use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
-        print("Cozmo says: " + greet + user_name + ". Entering FreePlay mode.")
     elif robot:
-        checkBattery(robot)
-        robot.set_all_backpack_lights(cozmo.lights.off_light)
-        robot.set_head_angle(degrees(30)).wait_for_completed()
         robot.drive_straight(distance_mm(30), speed_mmps(150), in_parallel=True).wait_for_completed()
-        robot.turn_in_place(degrees(5)).wait_for_completed()
-        robot.turn_in_place(degrees(-5)).wait_for_completed()
-        robot.play_anim('anim_freeplay_reacttoface_like_01').wait_for_completed()
-        ask_name(robot)
-        user_name = ask_name.parsedText
-        robot.say_text(greet + user_name + ". Entering FreePlay mode.",
-                       use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
-        print("Cozmo says: " + greet + user_name + ". Entering FreePlay mode.")
+
+    robot.turn_in_place(degrees(5)).wait_for_completed()
+    robot.turn_in_place(degrees(-5)).wait_for_completed()
+    robot.play_anim('anim_freeplay_reacttoface_like_01').wait_for_completed()
+    ask_name(robot)
+    user_name = ask_name.parsedText
+    robot.say_text(greet + user_name + ". Entering FreePlay mode.",
+                   use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
+    print("Cozmo says: " + greet + user_name + ". How are you today?")
 
 
 def checkBattery(robot):
@@ -559,7 +550,7 @@ def take_photo(robot):
 
 def freeplay(robot):
     rec = sr.Recognizer()
-    microphone = sr.Microphone(device_index=2)
+    microphone = sr.Microphone()
 
     print()
     cprint("==========================", "green", attrs=['bold'])
@@ -572,7 +563,7 @@ def freeplay(robot):
 
     while True:
         robot.start_freeplay_behaviors()
-        time.sleep(interval)
+        time.sleep(config.interval)
 
         with microphone as source:
             rec.pause_threshold = 0.6
@@ -583,7 +574,7 @@ def freeplay(robot):
             try:
                 cprint("Listening for wakeup command now.", "cyan")
                 # robot.play_audio(cozmo.audio.AudioEvents.Sfx_Morse_Code_Dot)  # Beep sound
-                voice = rec.listen(source, timeout=5)
+                voice = rec.listen(source, timeout = 5)
                 p = rec.recognize_google(voice)  # Recognizing audio
                 robot.play_audio(cozmo.audio.AudioEvents.Sfx_Morse_Code_Dash)  # Rec ok sound
 
@@ -599,17 +590,17 @@ def freeplay(robot):
 
             except sr.WaitTimeoutError:
                 cprint("Timeout. Checking again in ", "red", end=''), \
-                cprint(str(interval), "red", attrs=['bold'], end=''), cprint(" seconds.", "red")
+                cprint(str(config.interval), "red", attrs=['bold'], end=''), cprint(" seconds.", "red")
                 continue
             except sr.UnknownValueError:
                 cprint("Not found. Checking again in ", "yellow", end=''), \
-                cprint(str(interval), "yellow", attrs=['bold'], end=''), cprint(" seconds.", "yellow")
+                cprint(str(config.interval), "yellow", attrs=['bold'], end=''), cprint(" seconds.", "yellow")
                 continue
 
 
 def ask_name(robot):
     rec = sr.Recognizer()
-    microphone = sr.Microphone(device_index=2)
+    microphone = sr.Microphone()
     cprint("\nWhat's your name please?", "white", attrs=['bold'])
     robot.say_text("What's your name please?", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
         .wait_for_completed()
@@ -624,7 +615,7 @@ def ask_name(robot):
             cprint("Listening...", "white", attrs=['bold'])
             robot.play_audio(cozmo.audio.AudioEvents.Sfx_Morse_Code_Dot)  # Beep sound
             voice = rec.listen(source, timeout=5)  # Recording audio
-            cprint("Recognized.", "green")
+            cprint("Done Listening: recognizing...", "green")
             robot.play_audio(cozmo.audio.AudioEvents.Sfx_Morse_Code_Dash)  # Rec ok sound
             ask_name.parsedText = rec.recognize_google(voice)  # Recognizing audio
         except sr.WaitTimeoutError:
@@ -652,34 +643,34 @@ def printSupportedCommands():
     cprint("and", "green", end=''), cprint(" command ", "green", attrs=['bold'], end=''), cprint("examples:", "green")
     # cprint("['forward', 'back', 'left', 'right'] : ", "cyan", end=''), cprint("Cozmo go forward.", "white",
     # attrs=['bold'])
-    # cprint(str(cmd_arm) + " : ", "cyan", end=''), cprint("Cozmo lift your arm.", "white", attrs=['bold'])
-    # cprint(str(cmd_head) + " : ", "cyan", end=''), cprint("Cozmo look up please.", "white", attrs=['bold'])
-    # cprint(str(cmd_follow) + " : ", "cyan", end=''), cprint("Cozmo follow my face.", "white", attrs=['bold'])
-    cprint(str(cmd_photo) + " : ", "cyan", end=''), cprint("Cozmo take a photo.", "white", attrs=['bold'])
-    # cprint(str(cmd_blocks) + " : ", "cyan", end=''), cprint("Cozmo play with your blocks.", "white", attrs=['bold'])
-    cprint(str(cmd_dance) + " : ", "cyan", end=''), cprint("Cozmo dance around.", "white", attrs=['bold'])
-    cprint(str(cmd_sing) + " : ", "cyan", end=''), cprint("Cozmo sing me a song.", "white", attrs=['bold'])
-    cprint(str(cmd_music_rock) + " : ", "cyan", end=''), cprint("Cozmo play some rock music.", "white", attrs=['bold'])
-    cprint(str(cmd_music_favourites) + " : ", "cyan", end=''), cprint("Cozmo play my favourite songs.",
+    # cprint(str(voice_commands.arm) + " : ", "cyan", end=''), cprint("Cozmo lift your arm.", "white", attrs=['bold'])
+    # cprint(str(voice_commands.head) + " : ", "cyan", end=''), cprint("Cozmo look up please.", "white", attrs=['bold'])
+    # cprint(str(voice_commands.follow) + " : ", "cyan", end=''), cprint("Cozmo follow my face.", "white", attrs=['bold'])
+    cprint(str(voice_commands.photo) + " : ", "cyan", end=''), cprint("Cozmo take a photo.", "white", attrs=['bold'])
+    # cprint(str(voice_commands.blocks) + " : ", "cyan", end=''), cprint("Cozmo play with your blocks.", "white", attrs=['bold'])
+    cprint(str(voice_commands.dance) + " : ", "cyan", end=''), cprint("Cozmo dance around.", "white", attrs=['bold'])
+    cprint(str(voice_commands.sing) + " : ", "cyan", end=''), cprint("Cozmo sing me a song.", "white", attrs=['bold'])
+    cprint(str(voice_commands.music_rock) + " : ", "cyan", end=''), cprint("Cozmo play some rock music.", "white", attrs=['bold'])
+    cprint(str(voice_commands.music_favourites) + " : ", "cyan", end=''), cprint("Cozmo play my favourite songs.",
                                                                       "white", attrs=['bold'])
-    cprint(str(cmd_music_stop) + " : ", "cyan", end=''), cprint("Cozmo stop the music.", "white", attrs=['bold'])
-    cprint(str(cmd_weather_today) + " : ", "cyan", end=''), cprint("Cozmo what's the weather today?", "white",
+    cprint(str(voice_commands.music_stop) + " : ", "cyan", end=''), cprint("Cozmo stop the music.", "white", attrs=['bold'])
+    cprint(str(voice_commands.weather_today) + " : ", "cyan", end=''), cprint("Cozmo what's the weather today?", "white",
                                                                    attrs=['bold'])
-    cprint(str(cmd_weather_tomorrow) + " : ", "cyan", end=''), cprint("Cozmo what's the forecast for tomorrow?",
+    cprint(str(voice_commands.weather_tomorrow) + " : ", "cyan", end=''), cprint("Cozmo what's the forecast for tomorrow?",
                                                                       "white", attrs=['bold'])
-    cprint(str(cmd_time) + " : ", "cyan", end=''), cprint("Cozmo what's the time now?", "white", attrs=['bold'])
-    # cprint(str(cmd_sleep) + " : ", "cyan", end=''), cprint("Cozmo go to sleep.", "white", attrs=['bold'])
-    # cprint(str(cmd_charge) + " : ", "cyan", end=''), cprint("Cozmo go to your charger.", "white", attrs=['bold'])
+    cprint(str(voice_commands.time) + " : ", "cyan", end=''), cprint("Cozmo what's the time now?", "white", attrs=['bold'])
+    # cprint(str(voice_commands.sleep) + " : ", "cyan", end=''), cprint("Cozmo go to sleep.", "white", attrs=['bold'])
+    # cprint(str(voice_commands.charge) + " : ", "cyan", end=''), cprint("Cozmo go to your charger.", "white", attrs=['bold'])
     cprint("['mute', 'lower', 'raise', 'voice', 'maximum'] : ", "cyan", end=''), cprint("Cozmo lower your voice.",
                                                                                         "white", attrs=['bold'])
-    cprint(str(cmd_exit) + " : ", "cyan", end=''), cprint("Cozmo exit program please.", "white", attrs=['bold'])
+    cprint(str(voice_commands.exit) + " : ", "cyan", end=''), cprint("Cozmo exit program please.", "white", attrs=['bold'])
     cprint("['FreePlay'] : ", "cyan", end=''), cprint("Cozmo activate FreePlay mode.",
                                                       "white", attrs=['bold'])
 
 
 def listen_robot(robot):
     rec = sr.Recognizer()
-    microphone = sr.Microphone(device_index=2)
+    microphone = sr.Microphone()
 
     with microphone as source:
         rec.pause_threshold = 0.6
@@ -695,8 +686,8 @@ def listen_robot(robot):
             robot.play_audio(cozmo.audio.AudioEvents.Sfx_Morse_Code_Dash)  # Rec ok sound
             listen_robot.parsedText = rec.recognize_google(voice)  # Recognizing audio
         except sr.WaitTimeoutError:
-            cprint("Timeout...", "red")
-            listen_robot.parsedText = " "
+            cprint("Timeout. Retrying...", "red")
+            listen_robot(robot)
         except sr.UnknownValueError:
             cprint("Could not understand audio. Retrying...", "yellow")
             listen_robot(robot)
@@ -741,11 +732,11 @@ def addEntry(log, entry):
 def weather():
     # ==== Weather module initialization start ====
 
-    ip = get(cfg.ip_url).json()
+    ip = get(config.ip_url).json()
     location = unidecode.unidecode(ip["city"] + ", " + ip["country"]).replace(" ", "%20")
 
     # Request data
-    d = feedparser.parse(cfg.weather_url + location)
+    d = feedparser.parse(config.weather_url + location)
 
     # Parse weather data
     try:
@@ -766,14 +757,15 @@ def weather():
     # Output weather forecast or fall back to default response if location invalid.
     try:
         weather.today_response = ("Today in " + city + " will be " + todayDesc + ", with temperatures from" +
-                          todayLow + "degrees to " + todayHigh + "degrees celcius. " + "Right now it is " + now + ".")
+                                  todayLow + "degrees to " + todayHigh + "degrees celcius. " + "Right now it is " + now + ".")
         i = ("Tomorrow in " + city + " will be " + tomorrowDesc + ", with temperatures from " +
              tomorrowLow + "degrees to " + tomorrowHigh + "degrees celcius.")
         weather.tomorrow_response = (i[:254] + '') if len(i) > 254 else i
     except NameError:
-        cprint("ERROR: Invalid location. Falling back to default responses.", "red")
-        today_response = "I'm sorry, but your current location could not be determined."
-        tomorrow_response = "I'm sorry, but your current location could not be determined."
+        cprint("ERROR: Invalid location. Falling back to generic response.", "red")
+        weather.today_response = "I'm sorry, but your current location could not be determined."
+        weather.tomorrow_response = "I'm sorry, but your current location could not be determined."
+
 
 def readystate_complete(d):
     # AFAICT Selenium offers no better way to wait for the document to be loaded,
@@ -789,13 +781,12 @@ class AIBot:
         self.opts = Options()
         self.opts.add_argument("--headless")
         self.browser = webdriver.Firefox(options=self.opts)
+        self.browser.implicitly_wait(5.0)
         self.url = "http://demo.vhost.pandorabots.com/pandora/talk?botid=b0dafd24ee35a477"
         self.searchEngine = "https://start.duckduckgo.com"
 
     def get_form(self):
-
         # Find the form tag to enter your message
-        self.browser.implicitly_wait(10.0)
         self.elem = self.browser.find_element_by_name('input')
 
     def send_input(self, userInput):
@@ -837,10 +828,12 @@ class AIBot:
                   }
                 """)
                 response = (data[:254] + '') if len(data) > 254 else data
-                self.browser.quit()
             except BrokenPipeError:
                 AIBot().get_response()
-                self.browser.quit()
+            except TypeError:
+                time.sleep(2)
+                print("Received empty response. Retrying...")
+                AIBot().get_response()
             return response
 
 

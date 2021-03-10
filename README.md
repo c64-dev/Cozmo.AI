@@ -1,4 +1,4 @@
-<div align="middle">![Image Header](https://preview.redd.it/vkrxx5pzg8541.jpg?width=608&format=pjpg&auto=webp&s=352a35c3c4faab0c6978f4c2a0dd6738a62cbca7)</div>
+<div align="middle">![Image Header](https://preview.redd.it/vkrxx5pzg8541.jpg?width=608)</div>
 
 This project aims to extend Cozmo's abilities with voice recognition, interactive chatting sessions (served by online AI chatbots) special user commands, pulling useful information from the internet, etc.
 

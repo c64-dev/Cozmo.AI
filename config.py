@@ -5,6 +5,8 @@ Cozmo.AI
 Master configuration file.
 """
 
+
+interval = 3  # Setting the initial audio polling interval in seconds.
 weather_url = "http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode="
 ip_url = "http://ipinfo.io/json"
 capitals = {
@@ -20,3 +22,4 @@ capitals = {
     "KR": "Seoul", "ES": "Madrid", "SE": "Stockholm", "CH": "Bern", "TW": "Taipei", "TH": "Bangkok", "TR": "Ankara",
     "UA": "Kyiv", "AE": "Abu Dhabi", "GB": "London", "US": "Washington, D.C.", "UY": "Montevideo"
 }
+

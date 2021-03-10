@@ -2,7 +2,7 @@
 
 """
 Cozmo.AI
-v. 0.4.93
+v. 0.5.0
 Extending Anki Cozmo robot's abilities, by adding human voice recognition, basic AI bot functions and special commands
 like checking the time/weather, playing music on PC connected speaker etc.
 
@@ -50,7 +50,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from termcolor import cprint
 
 # General Parameters
-version = "ver. 0.4.92"
+version = "ver. 0.5.0"
 title = "Cozmo.AI       " + version
 author = "By c64-dev (nikosl@protonmail.com)"
 descr = "Adding AI chat and voice command functionality to Cozmo robot."

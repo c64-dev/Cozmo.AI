@@ -429,7 +429,7 @@ def clock(robot):
     current_directory = os.path.dirname(os.path.realpath(__file__))
     time_now = (datetime.datetime.now().strftime("%H%M"))
     time_speech = (datetime.datetime.now().strftime("%-I %M %p"))
-    png = os.path.join(current_directory, "clock_faces", time_now + ".png")
+    png = os.path.join(current_directory, "resources/clock_faces", time_now + ".png")
 
     # load some images and convert them for display cozmo's face
     image_settings = [(png, Image.BICUBIC)]

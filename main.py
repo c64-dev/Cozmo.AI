@@ -32,9 +32,10 @@ try:
     import cozmo
     import unidecode
     import voice_commands
+    import numpy
 
 except ImportError:
-    sys.exit("Some packages are required. Do `pip3 install selenium pillow termcolor cozmo requests SpeechRecognition"
+    sys.exit("Some packages are required. Do `pip3 install selenium pillow numpy termcolor cozmo requests SpeechRecognition"
              "selenium feedparser beautifulsoup4 unidecode pyaudio` to install.")
 
 from random import randint
@@ -44,6 +45,7 @@ from cozmo.util import degrees, distance_mm, speed_mmps
 from requests import get
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -77,15 +79,8 @@ def initCozmo():
 
     # try:
     cozmo.run_program(wake_up)
-    cozmo.run_program(freeplay)
     cozmo.run_program(mainLoop)  # ALT: (mainLoop, use_viewer=True, force_viewer_on_top=True)
     sys.exit(0)
-
-    #   ONLY FOR TESTING PURPOSES
-    # except SystemExit as e:
-    #    print('exception = "%s"' % e)
-    #    cprint('\nGoing on without Cozmo: for testing purposes only!', 'red')
-    #    mainLoop(None)
 
 
 # Main Program Loop
@@ -97,30 +92,28 @@ def mainLoop(robot):
     cozmoString = None
     bot = AIBot()
 
-    try:
-        # Connect to Chatbot
+    try:  # Connect to Chatbot
         bot.browser.get(bot.url)
-        robot.say_text("Yes " + user_name + "?", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
+        print("Cozmo says: Chat mode activated.")
+        robot.say_text("Chat mode, activated.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
             .wait_for_completed()
     except:
         bot.browser.close()
         cprint("Warning: Chat function offline. Returning to FreePlay mode.", "red")
-        robot.say_text("Warning: Chat function offline. Returning to FreePlay mode.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
+        robot.say_text("Warning: Chat function, offline. Returning to FreePlay mode.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
             .wait_for_completed()
         freeplay(robot)
-        mainLoop(robot)
 
     while True:
         # Try to get the chat's input form, otherwise resume FreePlay.
         try:
             bot.get_form()
-        except:
+        except NoSuchElementException:
             bot.browser.close()
             cprint("Warning: Chat function offline. Returning to FreePlay mode.", "red")
-            robot.say_text("Warning: Chat function offline. Returning to FreePlay mode.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
+            robot.say_text("Warning: Chat function, offline. Returning to FreePlay mode.", use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0) \
                 .wait_for_completed()
             freeplay(robot)
-            mainLoop(robot)
 
         # While robot is connected, listen to the user in a loop
         if robot:
@@ -485,6 +478,7 @@ def bored_anim(robot):
 
 def wake_up(robot):
     global user_name
+    bot = AIBot()
     t = (datetime.datetime.now().strftime("%H"))
 
     if t >= "20":
@@ -514,9 +508,9 @@ def wake_up(robot):
     robot.play_anim('anim_freeplay_reacttoface_like_01').wait_for_completed()
     ask_name(robot)
     user_name = ask_name.parsedText
-    robot.say_text(greet + user_name + ". Entering FreePlay mode.",
+    print("Cozmo says: " + greet + user_name + ". Please wait a moment.")
+    robot.say_text(greet + user_name + ". Please wait a moment.",
                    use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
-    print("Cozmo says: " + greet + user_name + ". How are you today?")
 
 
 def checkBattery(robot):
@@ -536,7 +530,8 @@ def take_photo(robot):
     print("Taking a picture...")
     message = ""
     pic_filename = "cozmo_pic_" + str(int(time.time())) + ".png"
-    robot.say_text("Say cheese!").wait_for_completed()
+    robot.say_text("Say cheese!",
+                   use_cozmo_voice=True, duration_scalar=0.6, voice_pitch=0).wait_for_completed()
     robot.play_audio(cozmo.audio.AudioEvents.Sfx_Flappy_Increase)
     latest_image = robot.world.latest_image
     if latest_image:
@@ -545,12 +540,13 @@ def take_photo(robot):
     else:
         message = "no picture saved"
     robot.camera.image_stream_enabled = False
-    return message
+    print(message)
 
 
 def freeplay(robot):
     rec = sr.Recognizer()
     microphone = sr.Microphone()
+    bot = AIBot()
 
     print()
     cprint("==========================", "green", attrs=['bold'])
@@ -663,7 +659,7 @@ def printSupportedCommands():
     # cprint(str(voice_commands.charge) + " : ", "cyan", end=''), cprint("Cozmo go to your charger.", "white", attrs=['bold'])
     cprint("['mute', 'lower', 'raise', 'voice', 'maximum'] : ", "cyan", end=''), cprint("Cozmo lower your voice.",
                                                                                         "white", attrs=['bold'])
-    cprint(str(voice_commands.exit) + " : ", "cyan", end=''), cprint("Cozmo exit program please.", "white", attrs=['bold'])
+    # cprint(str(voice_commands.exit) + " : ", "cyan", end=''), cprint("Cozmo exit program please.", "white", attrs=['bold'])
     cprint("['FreePlay'] : ", "cyan", end=''), cprint("Cozmo activate FreePlay mode.",
                                                       "white", attrs=['bold'])
 
@@ -692,10 +688,10 @@ def listen_robot(robot):
             cprint("Could not understand audio. Retrying...", "yellow")
             listen_robot(robot)
         except sr.RequestError as e:
+            cprint("Could not request results from Speech Recognition service; {0}".format(e), "red")
             robot.say_text("I'm sorry. Cannot connect to voice services. Exiting program.", use_cozmo_voice=True,
                            duration_scalar=0.6, voice_pitch=0) \
                 .wait_for_completed()
-            cprint("Could not request results from Speech Recognition service; {0}".format(e), "red")
             sys.exit(0)
 
 
@@ -779,7 +775,8 @@ class AIBot:
 
         # Initialize selenium options 
         self.opts = Options()
-        self.opts.add_argument("--headless")
+        #  self.opts.add_argument("--headless")
+        self.opts.add_argument("")
         self.browser = webdriver.Firefox(options=self.opts)
         self.browser.implicitly_wait(5.0)
         self.url = "http://demo.vhost.pandorabots.com/pandora/talk?botid=b0dafd24ee35a477"

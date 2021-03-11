@@ -26,12 +26,12 @@ export PATH=$PATH:~/.local/bin/
 3. Install all the necessary Python libraries. 
 - On **Windows** start a command prompt, go to Python's pip.exe location (eg C:\Python35\Scripts\) and run:
 ```
-pip.exe install -U selenium pillow termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
+pip.exe install -U selenium pillow numpy termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
 ```
 
 - On **MacOS/Linux** start a Terminal and run:
 ```
-pip3 install selenium pillow termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
+pip3 install selenium pillow numpy termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
 ```
 
 **For Apple Mac users only:** If you encounter an error trying to install **pyaudio**, then please install 

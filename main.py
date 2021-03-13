@@ -212,14 +212,12 @@ def check_weather(robot):
             print("Human says: " + humanString)
             # addEntry(log, "Human says: " + humanString)
             robot.play_anim("anim_memorymatch_point_player_audio").wait_for_completed()
-            # robot.say_text("Gathering weather data...", use_cozmo_voice=True, duration_scalar=0.6,
-            # voice_pitch=0).wait_for_completed()
             cprint("Gathering weather data... Please wait.", "yellow")
             weather()
             # addEntry(log, "Cosmo says: " + weather.tomorrow_response)
+            print("Cozmo says: " + weather.today_response)
             robot.say_text(weather.today_response, use_cozmo_voice=True, duration_scalar=0.6,
                            voice_pitch=0).wait_for_completed()
-            print("Cozmo says: " + weather.today_response)
             listen_robot(robot)
             humanString = listen_robot.parsedText
         elif command02:
@@ -227,9 +225,9 @@ def check_weather(robot):
             # addEntry(log, "Human says: " + humanString)
             cprint("Gathering weather data... Please wait.", "yellow")
             # addEntry(log, "Cosmo says: " + forecast_response)
+            print("Cozmo says: " + weather.tomorrow_response)
             robot.say_text(weather.tomorrow_response, use_cozmo_voice=True, duration_scalar=0.6,
                            voice_pitch=0).wait_for_completed()
-            print("Cozmo says: " + weather.tomorrow_response)
             listen_robot(robot)
             humanString = listen_robot.parsedText
         else:
@@ -625,9 +623,9 @@ def ask_name(robot):
             cprint("Retrying...", "yellow")
             ask_name(robot)
         except sr.RequestError as e:
+            cprint("Could not request results from Speech Recognition service; {0}".format(e), "red")
             robot.say_text("I'm sorry. Cannot connect to voice services. Exiting program.", use_cozmo_voice=True,
                            duration_scalar=0.6, voice_pitch=0).wait_for_completed()
-            cprint("Could not request results from Speech Recognition service; {0}".format(e), "red")
             sys.exit(0)
 
 
@@ -836,12 +834,12 @@ class AIBot:
 
 # TODO: Add web search ability (duckduckgo) class="results--sidebar js-results-sidebar"
 # TODO: Add bored events to random times if not doing anything (anim_bored_event_01 through to 04)
-# TODO: Add face animations for weather, music, etc Note: anim_meetcozmo_lookface_getout is great for DING sound.
+# TODO: Add face animations for weather, music, etc
 # TODO: Add movement commands
 # TODO: Randomize dance routines
 # TODO: Make Cozmo say something and go to sleep with animation.
 # TODO: Add pick me up ability
-# TODO: Capture all exceptions
+# IMPROVE: Capture all exceptions
 # IMPROVE: Increase webdriver speed / Change to Chromium since it offers always on capability.
 # IMPROVE: Incorporate improved selenium routines to main app.
 # IMPROVE: Have Cozmo return to base before exiting.

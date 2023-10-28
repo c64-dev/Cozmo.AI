@@ -41,6 +41,8 @@ brew install --build-from-source portaudio
 pip3 install pyaudio
 ```
 
+After pyaudio is installed, then run the previous pip command to install all the other libraries.
+
 ## Installation 
 
 After all the requirements are met you can install Cozmo.AI as follows:<br />

@@ -23,15 +23,19 @@ cp ~/geckodriver ~/.local/bin/
 export PATH=$PATH:~/.local/bin/
 ```
 
-3. Install all the necessary Python libraries. 
+3. Install all the necessary Python libraries.
+   **Important note:** Since Cozmo's API is unfortunately not actively maintained anymore, I had to fork the API and incorporate various fixes for issues
+   that were caused by third party Python libraries ungrading and breaking various calls in the code. 
 - On **Windows** start a command prompt, go to Python's pip.exe location (eg C:\Python35\Scripts\) and run:
 ```
-pip.exe install -U selenium pillow numpy termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
+pip.exe install -U selenium pillow numpy termcolor requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
+pip.exe install -U git+https://github.com/c64-dev/cozmo-python-sdk.git
 ```
 
 - On **MacOS/Linux** start a Terminal and run:
 ```
-pip3 install selenium pillow numpy termcolor cozmo requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
+pip3 install selenium pillow numpy termcolor requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
+pip3 install git+https://github.com/c64-dev/cozmo-python-sdk.git
 ```
 
 **For Apple Mac users only:** If you encounter an error trying to install **pyaudio**, then please install 

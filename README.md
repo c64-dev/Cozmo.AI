@@ -23,9 +23,10 @@ cp ~/geckodriver ~/.local/bin/
 export PATH=$PATH:~/.local/bin/
 ```
 
-3. Install all the necessary Python libraries.
-   **Important note:** Since Cozmo's API is unfortunately not actively maintained anymore, I had to fork the API and incorporate various fixes for issues
-   that were caused by third party Python libraries ungrading and breaking various calls in the code. 
+3. Install all the necessary Python libraries. 
+
+***Important note:*** Since Cozmo's API is unfortunately not actively maintained anymore, I had to fork the whole API and incorporate various fixes for issues that were caused by third party Python libraries ungrading and breaking various calls in the code. As such we are going to install cozmo's API library from the fork.
+
 - On **Windows** start a command prompt, go to Python's pip.exe location (eg C:\Python35\Scripts\) and run:
 ```
 pip.exe install -U selenium pillow numpy termcolor requests SpeechRecognition selenium feedparser beautifulsoup4 unidecode pyaudio
